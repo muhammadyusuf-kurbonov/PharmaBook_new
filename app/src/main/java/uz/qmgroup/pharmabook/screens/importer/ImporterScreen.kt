@@ -1,12 +1,15 @@
 package uz.qmgroup.pharmabook.screens.importer
 
+import android.icu.text.NumberFormat
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -14,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,9 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import uz.qmgroup.pharmabook.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,7 +109,7 @@ fun ImporterScreen(modifier: Modifier = Modifier, viewModel: ImporterViewModel =
         ImportScreenState.Calculating -> {
             Box(
                 modifier = modifier
-                    .fillMaxHeight()
+                    .fillMaxSize()
                     .padding(16.dp)
             ) {
                 Column(
@@ -119,7 +126,7 @@ fun ImporterScreen(modifier: Modifier = Modifier, viewModel: ImporterViewModel =
         is ImportScreenState.InProgress -> {
             Box(
                 modifier = modifier
-                    .fillMaxHeight()
+                    .fillMaxSize()
                     .padding(16.dp)
             ) {
                 Column(
@@ -127,8 +134,34 @@ fun ImporterScreen(modifier: Modifier = Modifier, viewModel: ImporterViewModel =
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    LinearProgressIndicator(progress = currentState.percentage / 100)
-                    Text(text = "Import ${currentState.percentage}")
+                    LinearProgressIndicator(progress = currentState.percentage)
+                    Text(
+                        text = "Import ${
+                            NumberFormat.getPercentInstance().format(currentState.percentage)
+                        }"
+                    )
+                }
+            }
+        }
+        is ImportScreenState.Completed -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        modifier = Modifier.fillMaxWidth(0.2f),
+                        painter = painterResource(id = R.drawable.baseline_check_circle_24),
+                        contentDescription = "Success",
+                        contentScale = ContentScale.FillWidth
+                    )
+                    Text(text = "Import completed !", style = MaterialTheme.typography.labelLarge)
+                    Text(text = "Imported ${currentState.total} medicines", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }

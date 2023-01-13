@@ -33,4 +33,30 @@ class XLSXImporterTest {
             coVerify(exactly = 4321) { storage.saveMedicine(any()) }
         }
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun startImportWithTrunk() {
+        val storage = mockk<MedicineStorage>(relaxed = true)
+        val parser = PharmGateGroupParser()
+        val workbook = WorkbookFactory.create(
+            javaClass.classLoader?.getResourceAsStream("test-pharm-group.xls")
+                ?: throw IllegalArgumentException()
+        )
+
+        val importer = XLSXImporter(
+            parser = parser,
+            sheet = workbook.first(),
+            storage = storage
+        )
+
+        return runTest {
+            importer.startImport(
+                trunkBeforeImport = true
+            )
+
+            coVerify(exactly = 1) { storage.removeOldMedicines("Pharm Gate") }
+            coVerify(exactly = 4321) { storage.saveMedicine(any()) }
+        }
+    }
 }

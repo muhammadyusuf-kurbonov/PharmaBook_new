@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     version = 1,
-    entities = [MedicineEntity::class]
+    entities = [MedicineEntity::class],
 )
 abstract class MedicineDatabase: RoomDatabase() {
     companion object {

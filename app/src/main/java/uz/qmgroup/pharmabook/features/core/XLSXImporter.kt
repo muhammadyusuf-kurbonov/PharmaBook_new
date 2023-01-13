@@ -18,7 +18,10 @@ class XLSXImporter(
         return count
     }
 
-    suspend fun startImport() = withContext(Dispatchers.IO) {
+    suspend fun startImport(trunkBeforeImport: Boolean = false) = withContext(Dispatchers.IO) {
+        if (trunkBeforeImport)
+            storage.removeOldMedicines(parser.providerName)
+
         sheet.rowIterator().forEach {
             val medicine = parser.parse(it)
             if (medicine != null)

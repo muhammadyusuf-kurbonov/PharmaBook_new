@@ -8,7 +8,8 @@ fun Medicine.toEntity() = MedicineEntity(
     price = price,
     expiringDate = expireDate,
     medicineCode = id,
-    id = databaseId
+    id = databaseId,
+    dealer = dealer
 )
 
 fun MedicineEntity.toDomain() = Medicine(
@@ -17,5 +18,6 @@ fun MedicineEntity.toDomain() = Medicine(
     price = price,
     expireDate = expiringDate,
     id = medicineCode,
-    databaseId = id
+    databaseId = id,
+    dealer = dealer
 )

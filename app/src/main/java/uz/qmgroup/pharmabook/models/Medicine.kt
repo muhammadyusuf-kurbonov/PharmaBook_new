@@ -6,5 +6,6 @@ data class Medicine(
     val name: String,
     val manufacturer: String,
     val price: Double,
-    val expireDate: String
+    val expireDate: String,
+    val dealer: String
 )

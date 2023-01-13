@@ -11,4 +11,8 @@ class MedicinesRepo(
     override suspend fun saveMedicine(medicine: Medicine) = withContext(Dispatchers.IO) {
         database.medicineDao.insert(medicine.toEntity())
     }
+
+    override suspend fun removeOldMedicines(dealer: String) = withContext(Dispatchers.IO){
+        database.medicineDao.deleteDealersMedicines(dealer)
+    }
 }

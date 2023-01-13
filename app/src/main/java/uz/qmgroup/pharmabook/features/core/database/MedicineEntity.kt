@@ -11,5 +11,6 @@ data class MedicineEntity(
     val name: String,
     val manufacturer: String,
     val expiringDate: String,
-    val price: Double
+    val price: Double,
+    val dealer: String
 )

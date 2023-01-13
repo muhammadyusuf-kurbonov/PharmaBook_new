@@ -37,18 +37,20 @@ class ImporterViewModel: ViewModel() {
                     parser = parser
                 )
 
-                val count = importer.countMedicines()
+                val total = importer.countMedicines()
 
                 _state.update { ImportScreenState.InProgress(0f) }
 
                 val counter = launch {
-                    database.medicineDao.allMedicinesCount().collect {
-                        val percentage = it / count * 100
-                        _state.update { ImportScreenState.InProgress(percentage.toFloat()) }
+                    database.medicineDao.dealersMedicinesCount(parser.providerName).collect {
+                        val percentage = (it+1).toFloat() / total.toFloat()
+                        _state.update { ImportScreenState.InProgress(percentage) }
                     }
                 }
 
-                importer.startImport()
+                importer.startImport(trunkBeforeImport = true)
+
+                _state.update { ImportScreenState.Completed(total) }
 
                 counter.cancel()
             }

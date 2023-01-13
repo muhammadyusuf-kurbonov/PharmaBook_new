@@ -5,7 +5,8 @@ import uz.qmgroup.pharmabook.features.core.XLSXParser
 import uz.qmgroup.pharmabook.models.Medicine
 
 class PharmGateGroupParser: XLSXParser {
-    override fun firstValidRowId(): Int = 5
+    override val providerName: String
+        get() = "Pharm Gate"
 
     override fun parse(row: Row): Medicine? {
         return try {
@@ -15,7 +16,8 @@ class PharmGateGroupParser: XLSXParser {
                 price = row.getCell(4).numericCellValue,
                 manufacturer = row.getCell(2).stringCellValue,
                 name = row.getCell(1).stringCellValue,
-                expireDate = row.getCell(5).stringCellValue
+                expireDate = row.getCell(5).stringCellValue,
+                dealer = providerName
             )
         } catch (e: Exception) {
             e.printStackTrace()
