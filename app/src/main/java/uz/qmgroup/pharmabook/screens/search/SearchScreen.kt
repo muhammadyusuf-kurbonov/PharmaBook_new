@@ -2,7 +2,6 @@ package uz.qmgroup.pharmabook.screens.search
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import uz.qmgroup.pharmabook.features.core.database.MedicineComponent
 import uz.qmgroup.pharmabook.models.Medicine
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class,
+@OptIn(ExperimentalAnimationApi::class,
     ExperimentalMaterial3Api::class
 )
 @Composable
