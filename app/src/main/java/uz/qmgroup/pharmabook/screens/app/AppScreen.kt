@@ -17,12 +17,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.qmgroup.pharmabook.R
+import uz.qmgroup.pharmabook.features.core.database.MedicineDatabase
+import uz.qmgroup.pharmabook.features.core.database.MedicinesRepo
 import uz.qmgroup.pharmabook.screens.importer.ImporterScreen
 import uz.qmgroup.pharmabook.screens.search.SearchScreen
+import uz.qmgroup.pharmabook.screens.search.SearchViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
@@ -32,6 +36,7 @@ fun AppScreen(
     viewModel: AppViewModel = viewModel(),
 ) {
     val currentState by viewModel.state.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         modifier = modifier,
@@ -77,7 +82,14 @@ fun AppScreen(
                     SearchScreen(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(padding)
+                            .padding(padding),
+                        viewModel = viewModel {
+                            SearchViewModel(
+                                MedicinesRepo(
+                                    MedicineDatabase(context)
+                                )
+                            )
+                        }
                     )
                 }
             }

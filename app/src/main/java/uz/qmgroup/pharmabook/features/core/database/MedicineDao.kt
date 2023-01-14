@@ -18,4 +18,7 @@ interface MedicineDao {
 
     @Query("DELETE FROM MedicineEntity WHERE dealer=:dealer")
     suspend fun deleteDealersMedicines(dealer: String)
+
+    @Query("SELECT * FROM MedicineEntity WHERE name LIKE '%' || :query || '%'")
+    suspend fun queryMedicines(query: String): List<MedicineEntity>
 }

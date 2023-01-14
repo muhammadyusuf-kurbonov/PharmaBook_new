@@ -15,4 +15,8 @@ class MedicinesRepo(
     override suspend fun removeOldMedicines(dealer: String) = withContext(Dispatchers.IO){
         database.medicineDao.deleteDealersMedicines(dealer)
     }
+
+    suspend fun queryMedicines(query: String): List<Medicine> = withContext(Dispatchers.IO) {
+        database.medicineDao.queryMedicines(query).map { it.toDomain() }
+    }
 }
