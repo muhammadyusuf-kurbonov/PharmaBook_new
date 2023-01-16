@@ -25,7 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import uz.qmgroup.pharmabook.features.core.database.MedicineComponent
+import uz.qmgroup.pharmabook.components.MedicineComponent
 import uz.qmgroup.pharmabook.models.Medicine
 
 @OptIn(

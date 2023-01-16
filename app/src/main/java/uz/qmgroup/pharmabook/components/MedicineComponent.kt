@@ -1,4 +1,4 @@
-package uz.qmgroup.pharmabook.features.core.database
+package uz.qmgroup.pharmabook.components
 
 import android.icu.text.NumberFormat
 import androidx.compose.foundation.layout.Arrangement
@@ -35,12 +35,12 @@ fun MedicineComponent(modifier: Modifier = Modifier, medicine: Medicine) {
                 )
             }
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text(text = medicine.manufacturer, style = MaterialTheme.typography.labelMedium)
-
-                Text(
-                    text = "SKU: ${medicine.id}",
-                    style = MaterialTheme.typography.labelMedium
-                )
+                Text(text = medicine.dealer, style = MaterialTheme.typography.labelMedium)
+//
+//                Text(
+//                    text = "SKU: ${medicine.id}",
+//                    style = MaterialTheme.typography.labelMedium
+//                )
             }
         }
     }

@@ -53,8 +53,11 @@ fun AppScreen(
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Search"
+                            contentDescription = stringResource(id = R.string.Search)
                         )
+                    },
+                    label = {
+                        Text(text = stringResource(R.string.Search))
                     }
                 )
                 NavigationBarItem(
@@ -63,8 +66,11 @@ fun AppScreen(
                     icon = {
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_archive_24),
-                            contentDescription = "Import"
+                            contentDescription = stringResource(id = R.string.Import)
                         )
+                    },
+                    label = {
+                        Text(text = stringResource(R.string.Import))
                     }
                 )
             }
