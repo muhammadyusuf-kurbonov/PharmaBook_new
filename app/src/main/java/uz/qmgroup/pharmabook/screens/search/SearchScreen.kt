@@ -28,7 +28,8 @@ import androidx.compose.ui.unit.dp
 import uz.qmgroup.pharmabook.features.core.database.MedicineComponent
 import uz.qmgroup.pharmabook.models.Medicine
 
-@OptIn(ExperimentalAnimationApi::class,
+@OptIn(
+    ExperimentalAnimationApi::class,
     ExperimentalMaterial3Api::class
 )
 @Composable
@@ -91,7 +92,8 @@ fun SearchScreen(
                     Box(modifier = Modifier.fillMaxSize()) {
                         Column(
                             modifier = Modifier.align(Alignment.Center),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             CircularProgressIndicator()
                             Text(text = "Searching ...")
