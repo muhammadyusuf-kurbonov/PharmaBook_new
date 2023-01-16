@@ -12,11 +12,15 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 import uz.qmgroup.pharmabook.features.core.XLSXImporter
 import uz.qmgroup.pharmabook.features.core.database.MedicineDatabase
 import uz.qmgroup.pharmabook.features.core.database.MedicinesRepo
-import uz.qmgroup.pharmabook.features.core.providers.PharmGateGroupParser
+import uz.qmgroup.pharmabook.features.core.providers.UniversalAutoParser
 
 class ImporterViewModel: ViewModel() {
     private val _state = MutableStateFlow<ImportScreenState>(ImportScreenState.AwaitFileSelect)
     val state = _state.asStateFlow()
+
+    fun newImport() {
+        _state.update { ImportScreenState.AwaitFileSelect }
+    }
 
     fun startImport(context: Context, fireUri: Uri) {
         viewModelScope.launch {
@@ -24,16 +28,16 @@ class ImporterViewModel: ViewModel() {
             val database = MedicineDatabase(context)
             val repository = MedicinesRepo(database)
 
-            val parser = PharmGateGroupParser()
-
             val workbook = WorkbookFactory.create(
                 context.contentResolver.openInputStream(fireUri)
             )
 
             workbook.use { book ->
+                val sheet = book.first()
+                val parser = UniversalAutoParser(sheet)
                 val importer = XLSXImporter(
                     storage = repository,
-                    sheet = book.first(),
+                    sheet = sheet,
                     parser = parser
                 )
 
@@ -50,7 +54,7 @@ class ImporterViewModel: ViewModel() {
 
                 importer.startImport(trunkBeforeImport = true)
 
-                _state.update { ImportScreenState.Completed(total) }
+                _state.update { ImportScreenState.Completed(total, parser.providerName) }
 
                 counter.cancel()
             }
