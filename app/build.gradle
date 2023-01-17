@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace 'uz.qmgroup.pharmabook'
+    namespace 'uz.qmgroup.pharmadealers'
     compileSdk 33
 
     defaultConfig {
-        applicationId "uz.qmgroup.pharmabook"
+        applicationId "uz.qmgroup.pharmadealers"
         minSdk 26
         targetSdk 33
         versionCode 2
