@@ -1,4 +1,4 @@
-package uz.qmgroup.pharmadealers.features.core.providers
+package uz.qmgroup.pharmadealers.features.core.parsers
 
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
@@ -10,10 +10,7 @@ import uz.qmgroup.pharmadealers.features.core.utils.findCellId
 import uz.qmgroup.pharmadealers.features.core.utils.stringValueOrNull
 import uz.qmgroup.pharmadealers.models.Medicine
 
-class UniversalAutoParser(
-    sheet: Sheet
-) : XLSXParser {
-    private val credentialsRegex = Regex("(ООО|МЧЖ|MCHJ|OOO)", RegexOption.IGNORE_CASE)
+class UniversalSheetParser(private val sheet: Sheet) : XLSXParser {
     private val priceRegex = Regex("(Цена)|(тўлов)|(100%)", RegexOption.IGNORE_CASE)
     private val nameRegex =
         Regex("(Nomi)|(Номи)|(Наименование)|(Название)", RegexOption.IGNORE_CASE)
@@ -32,25 +29,7 @@ class UniversalAutoParser(
     override val providerName: String
 
     init {
-        val credentialsRow = sheet.take(20).find { row ->
-            row.any { cell ->
-                cell.stringValueOrNull()?.contains(credentialsRegex) ?: false
-            }
-        } ?: throw ProviderNotIdentifiedException()
-
-        val rawProviderName = credentialsRow.find { cell ->
-            cell.stringCellValue.contains(credentialsRegex)
-        }?.stringCellValue
-            ?: throw IllegalStateException("Cell with credentials could not be found?!")
-
-        providerName = if (rawProviderName.contains("\n")) {
-            rawProviderName.split("\n").find {
-                it.contains(credentialsRegex)
-            } ?: throw IllegalStateException("Cell with credentials could not be found?!")
-        } else {
-            rawProviderName
-        }
-
+        providerName = parseProviderName()
         specialParser = specialParsers[providerName]
 
         val headersRow = sheet.take(20).find { row ->
@@ -63,6 +42,31 @@ class UniversalAutoParser(
             ?: throw HeaderNotFoundException("Name")
         manufacturerCellId = headersRow.findCellId(manufacturerRegex)
             ?: throw HeaderNotFoundException("Manufacturer")
+    }
+
+    private fun parseProviderName(): String {
+        val credentialsRegex = Regex("(ООО|МЧЖ|MCHJ|OOO)", RegexOption.IGNORE_CASE)
+
+        val credentialsRow = sheet.take(20).find { row ->
+            row.any { cell ->
+                cell.stringValueOrNull()?.contains(credentialsRegex) ?: false
+            }
+        } ?: throw ProviderNotIdentifiedException()
+
+        val rawProviderName = credentialsRow.find { cell ->
+            cell.stringCellValue.contains(credentialsRegex)
+        }?.stringCellValue
+            ?: throw IllegalStateException("Cell with credentials could not be found?!")
+
+        val providerName = if (rawProviderName.contains("\n")) {
+            rawProviderName.split("\n").find {
+                it.contains(credentialsRegex)
+            } ?: throw IllegalStateException("Cell with credentials could not be found?!")
+        } else {
+            rawProviderName
+        }
+
+        return providerName
     }
 
     override fun parse(row: Row): Medicine? {

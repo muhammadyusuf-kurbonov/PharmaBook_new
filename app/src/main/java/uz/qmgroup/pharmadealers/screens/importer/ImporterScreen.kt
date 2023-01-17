@@ -8,12 +8,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,14 +48,14 @@ fun ImporterScreen(modifier: Modifier = Modifier, viewModel: ImporterViewModel =
 
     when (val currentState = state) {
         ImportScreenState.AwaitFileSelect -> {
-            var selectedFileUri by remember {
-                mutableStateOf<Uri?>(null)
+            var selectedFileUris by remember {
+                mutableStateOf<List<Uri>?>(null)
             }
 
             val pickLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.OpenDocument(),
+                contract = ActivityResultContracts.OpenMultipleDocuments(),
             ) {
-                selectedFileUri = it
+                selectedFileUris = it
             }
 
             Column(
@@ -61,24 +64,24 @@ fun ImporterScreen(modifier: Modifier = Modifier, viewModel: ImporterViewModel =
                     .fillMaxHeight()
                     .padding(16.dp)
             ) {
-                val uri = selectedFileUri
+                val uris = selectedFileUris
                 Card(
                     onClick = {
-                        if (selectedFileUri == null) {
+                        if (selectedFileUris == null) {
                             pickLauncher.launch(
                                 arrayOf(
                                     "application/vnd.ms-excel",
                                     "*/*"
-                                )
+                                ),
                             )
                         } else {
-                            selectedFileUri = null
+                            selectedFileUris = null
                         }
                     }, modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    if (uri == null) {
+                    if (uris.isNullOrEmpty()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -87,29 +90,31 @@ fun ImporterScreen(modifier: Modifier = Modifier, viewModel: ImporterViewModel =
                             Text(text = "Select file", modifier = Modifier.align(Alignment.Center))
                         }
                     } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp)
-                        ) {
-                            Text(
-                                text = "${uri.lastPathSegment?.split("/")?.last()}",
-                                modifier = Modifier.align(Alignment.Center)
-                            )
+                        uris.forEach { uri ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp)
+                            ) {
+                                Text(
+                                    text = "${uri.lastPathSegment?.split("/")?.last()}",
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
                         }
                     }
                 }
 
 
                 Button(onClick = {
-                    viewModel.startImport(context = context, fireUri = uri!!)
-                }, modifier = Modifier.align(Alignment.End), enabled = uri != null) {
+                    viewModel.startImport(context = context, filesUris = uris!!)
+                }, modifier = Modifier.align(Alignment.End), enabled = uris != null) {
                     Text(text = "Next")
                 }
             }
         }
 
-        ImportScreenState.Calculating -> {
+        ImportScreenState.Analyzing -> {
             Box(
                 modifier = modifier
                     .fillMaxSize()
@@ -127,25 +132,25 @@ fun ImporterScreen(modifier: Modifier = Modifier, viewModel: ImporterViewModel =
         }
 
         is ImportScreenState.InProgress -> {
-            Box(
+            LazyColumn(
                 modifier = modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Top
             ) {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    LinearProgressIndicator(progress = currentState.percentage)
-                    Text(
-                        text = "Import ${
-                            NumberFormat.getPercentInstance().format(currentState.percentage)
-                        }"
-                    )
+                items(currentState.progresses.entries.toList()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = it.key, style = MaterialTheme.typography.bodyMedium)
+                        LinearProgressIndicator(progress = it.value, modifier = Modifier.weight(1f))
+                        Text(text = NumberFormat.getPercentInstance().format(it.value))
+                    }
                 }
             }
         }
+
         is ImportScreenState.Completed -> {
             Box(
                 modifier = modifier
@@ -164,7 +169,11 @@ fun ImporterScreen(modifier: Modifier = Modifier, viewModel: ImporterViewModel =
                         contentScale = ContentScale.FillWidth
                     )
                     Text(text = "Import completed !", style = MaterialTheme.typography.labelLarge)
-                    Text(text = "Imported ${currentState.total} medicines from \n ${currentState.dealerName}", style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center)
+                    Text(
+                        text = "Imported ${currentState.total} medicines",
+                        style = MaterialTheme.typography.labelMedium,
+                        textAlign = TextAlign.Center
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { viewModel.newImport() }) {
                         Text(text = "New import")

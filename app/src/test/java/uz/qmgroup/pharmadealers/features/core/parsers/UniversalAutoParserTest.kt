@@ -1,4 +1,4 @@
-package uz.qmgroup.pharmadealers.features.core.providers
+package uz.qmgroup.pharmadealers.features.core.parsers
 
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.junit.Assert.assertEquals
@@ -15,7 +15,7 @@ class UniversalAutoParserTest {
         )
 
         val sheet = workbook.first()
-        val parser = UniversalAutoParser(sheet)
+        val parser = UniversalSheetParser(sheet)
         assertEquals("AERO PHARM GROUP ООО", parser.providerName)
         val parseResult = parser.parse(sheet.getRow(9))
         assertNotNull(parseResult)
@@ -32,7 +32,7 @@ class UniversalAutoParserTest {
         )
 
         val sheet = workbook.first()
-        val parser = UniversalAutoParser(sheet)
+        val parser = UniversalSheetParser(sheet)
         assertEquals(" \"АЗИМБОЙ МЕГА ФАРМ\" МЧЖ", parser.providerName)
         val parseResult = parser.parse(sheet.getRow(9))
         assertNotNull(parseResult)
@@ -49,7 +49,7 @@ class UniversalAutoParserTest {
         )
 
         val sheet = workbook.first()
-        val parser = UniversalAutoParser(sheet)
+        val parser = UniversalSheetParser(sheet)
         assertEquals("ООО \"МУХТАСАР\"  МЧЖ", parser.providerName)
         val parseResult = parser.parse(sheet.getRow(9))
         assertNotNull(parseResult)
@@ -66,7 +66,7 @@ class UniversalAutoParserTest {
         )
 
         val sheet = workbook.first()
-        val parser = UniversalAutoParser(sheet)
+        val parser = UniversalSheetParser(sheet)
         assertEquals("OOO «Pharm Gate Group»", parser.providerName)
         val parseResult = parser.parse(sheet.getRow(9))
         assertNotNull(parseResult)

@@ -1,4 +1,4 @@
-package uz.qmgroup.pharmadealers.features.core.providers
+package uz.qmgroup.pharmadealers.features.core.parsers
 
 import org.apache.poi.ss.usermodel.Row
 import uz.qmgroup.pharmadealers.features.core.XLSXParser
