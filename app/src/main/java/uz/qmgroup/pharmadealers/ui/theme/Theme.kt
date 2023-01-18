@@ -68,7 +68,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun PharmaBookTheme(
+fun PharmaDealersTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     useDynamicColor: Boolean = false,
