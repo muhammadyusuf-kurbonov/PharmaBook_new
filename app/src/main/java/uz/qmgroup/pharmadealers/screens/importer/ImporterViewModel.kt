@@ -30,8 +30,14 @@ class ImporterViewModel : ViewModel() {
     private val mutex = Mutex()
 
     fun addWorkbookToQueue(book: Workbook) {
-        if (_state.value !is ImportScreenState.AwaitFileSelect)
+        if (!(
+                    (_state.value is ImportScreenState.AwaitFileSelect) or
+                            (_state.value is ImportScreenState.Analyzing))
+        )
             throw IllegalStateException("State must be awaiting file select")
+
+        _state.update { ImportScreenState.Analyzing(it.dealers) }
+
         books.add(book)
         extractProvidersNames(true)
     }
@@ -45,6 +51,10 @@ class ImporterViewModel : ViewModel() {
 
     fun newImport() {
         _state.update { ImportScreenState.AwaitFileSelect(emptyList()) }
+    }
+
+    fun setAnalysisStarted() {
+        _state.update { ImportScreenState.Analyzing(it.dealers) }
     }
 
     fun startImport(context: Context) {
@@ -111,16 +121,20 @@ class ImporterViewModel : ViewModel() {
     }
 
     private fun extractProvidersNames(overrideExceptions: Boolean = false) {
-        val parser = XLSXWorkbooksParser()
-        _state.update {
+        viewModelScope.launch(Dispatchers.Default) {
+            val parser = XLSXWorkbooksParser()
             var allAvailableProviders = parser.getAllAvailableProviders(books)
 
             if (!overrideExceptions)
                 allAvailableProviders =
                     allAvailableProviders.filter { dealer -> !exceptedDealers.contains(dealer) }
-            ImportScreenState.AwaitFileSelect(
-                allAvailableProviders
-            )
+
+            _state.update {
+                ImportScreenState.AwaitFileSelect(
+                    allAvailableProviders
+                )
+            }
+
         }
     }
 }

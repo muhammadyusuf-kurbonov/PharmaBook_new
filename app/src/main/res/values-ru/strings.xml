@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PharmaDealers</string>
+    <string name="Search">Поиск</string>
+    <string name="Import">Импорт</string>
+    <string name="Ready">Готово</string>
+    <string name="title_activity_import">Импортировать</string>
+    <string name="title_activity_imports">Импортировать несколько</string>
+    <string name="Detected_dealers_to_import">Обнаружены следующие поставщики для импорта</string>
+</resources>

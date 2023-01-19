@@ -11,26 +11,23 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import uz.qmgroup.pharmadealers.R
 
 
 @Composable
@@ -65,7 +62,6 @@ fun FileSelectScreen(
                 pickLauncher.launch(
                     arrayOf(
                         "application/vnd.ms-excel",
-                        "*/*"
                     ),
                 )
             }, modifier = Modifier
@@ -83,7 +79,7 @@ fun FileSelectScreen(
 
         if (dealers.isNotEmpty()) {
             Text(
-                text = "Detected dealers to import",
+                text = stringResource(R.string.Detected_dealers_to_import),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
@@ -96,7 +92,6 @@ fun FileSelectScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -104,18 +99,20 @@ fun FileSelectScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier
                                 .padding(vertical = 4.dp, horizontal = 8.dp)
+                                .weight(1f)
                         )
 
-                        IconButton(onClick = {
-                            removeBook(it)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                        // TODO: To complete feature
+//                        IconButton(onClick = {
+//                            removeBook(it)
+//                        }) {
+//                            Icon(
+//                                imageVector = Icons.Default.Close,
+//                                contentDescription = null,
+//                                tint = MaterialTheme.colorScheme.onSurface,
+//                                modifier = Modifier.size(24.dp)
+//                            )
+//                        }
                     }
                 }
             }

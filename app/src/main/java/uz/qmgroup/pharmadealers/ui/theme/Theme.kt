@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
+private val darkColorScheme = darkColorScheme(
     primary = Color(0xFF5fd4fd),
     onPrimary = Color(0xFF003544),
     primaryContainer = Color(0xFF004d62),
@@ -41,7 +41,7 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = Color(0xFFc0c8cc)
 )
 
-private val LightColorScheme = lightColorScheme(
+private val lightColorScheme = lightColorScheme(
     primary = Color(0xFF006781),
     onPrimary = Color(0xFFffffff),
     primaryContainer = Color(0xFFb9eaff),
@@ -80,8 +80,8 @@ fun PharmaDealersTheme(
         useDynamicColor -> if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(
             context
         )
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> darkColorScheme
+        else -> lightColorScheme
     }
     val view = LocalView.current
 

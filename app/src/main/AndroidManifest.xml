@@ -13,9 +13,25 @@
         android:theme="@style/Theme.PharmaBook"
         tools:targetApi="31">
         <activity
+            android:name=".ImportActivity"
+            android:description="@string/title_activity_import"
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:theme="@style/Theme.PharmaBook">
+            <intent-filter android:label="@string/title_activity_import">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/*" />
+            </intent-filter>
+            <intent-filter android:label="@string/title_activity_imports">
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/*" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.PharmaBook">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
