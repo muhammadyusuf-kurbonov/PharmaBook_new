@@ -1,7 +1,6 @@
 package uz.qmgroup.pharmadealers.screens.importer
 
 import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +13,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.apache.poi.ss.usermodel.Workbook
-import org.apache.poi.ss.usermodel.WorkbookFactory
 import uz.qmgroup.pharmadealers.features.core.XLSXWorkbookImporter
 import uz.qmgroup.pharmadealers.features.core.XLSXWorkbooksParser
 import uz.qmgroup.pharmadealers.features.core.database.MedicineDatabase
@@ -22,30 +20,50 @@ import uz.qmgroup.pharmadealers.features.core.database.MedicinesRepo
 import uz.qmgroup.pharmadealers.features.core.parsers.UniversalSheetParser
 
 class ImporterViewModel : ViewModel() {
-    private val _state = MutableStateFlow<ImportScreenState>(ImportScreenState.AwaitFileSelect)
+    private val _state = MutableStateFlow<ImportScreenState>(
+        ImportScreenState.AwaitFileSelect(emptyList())
+    )
     val state = _state.asStateFlow()
 
+    private val books = mutableListOf<Workbook>()
+    private val exceptedDealers = mutableListOf<String>()
     private val mutex = Mutex()
 
-    fun newImport() {
-        _state.update { ImportScreenState.AwaitFileSelect }
+    fun addWorkbookToQueue(book: Workbook) {
+        if (_state.value !is ImportScreenState.AwaitFileSelect)
+            throw IllegalStateException("State must be awaiting file select")
+        books.add(book)
+        extractProvidersNames(true)
     }
 
-    fun startImport(context: Context, filesUris: List<Uri>) {
+    fun excludeDealerFromImport(dealer: String) {
+        if (_state.value !is ImportScreenState.AwaitFileSelect)
+            throw IllegalStateException("State must be awaiting file select")
+        exceptedDealers.add(dealer)
+        extractProvidersNames()
+    }
+
+    fun newImport() {
+        _state.update { ImportScreenState.AwaitFileSelect(emptyList()) }
+    }
+
+    fun startImport(context: Context) {
+        _state.update { ImportScreenState.Analyzing(it.dealers) }
         viewModelScope.launch {
-            _state.update { ImportScreenState.Analyzing }
             val database = MedicineDatabase(context)
             val repository = MedicinesRepo(database)
 
-            val workbooks = filesUris.map {
-                WorkbookFactory.create(
-                    context.contentResolver.openInputStream(it)
+            val workbooks = books
+
+            _state.update {
+                ImportScreenState.InProgress(
+                    mapOf(
+                        *it.dealers.map { dealer ->
+                            (dealer to 0f)
+                        }.toTypedArray()
+                    )
                 )
             }
-
-            _state.update { ImportScreenState.Analyzing }
-
-            extractProvidersNames(workbooks = workbooks)
 
             val imports = workbooks.map { workbook ->
                 async(Dispatchers.IO) {
@@ -78,7 +96,7 @@ class ImporterViewModel : ViewModel() {
                 }
             }
             val totalImported = imports.awaitAll().sumOf { it }
-            _state.update { ImportScreenState.Completed(totalImported) }
+            _state.update { ImportScreenState.Completed(it.dealers, totalImported) }
         }
     }
 
@@ -92,15 +110,17 @@ class ImporterViewModel : ViewModel() {
         }
     }
 
-    private fun extractProvidersNames(workbooks: List<Workbook>) {
-        val parser = XLSXWorkbooksParser(workbooks)
+    private fun extractProvidersNames(overrideExceptions: Boolean = false) {
+        val parser = XLSXWorkbooksParser()
         _state.update {
-            val progresses = mutableMapOf<String, Float>()
-            parser.getAllAvailableProviders().forEach {
-                progresses[it] = 0f
-            }
+            var allAvailableProviders = parser.getAllAvailableProviders(books)
 
-            ImportScreenState.InProgress(progresses)
+            if (!overrideExceptions)
+                allAvailableProviders =
+                    allAvailableProviders.filter { dealer -> !exceptedDealers.contains(dealer) }
+            ImportScreenState.AwaitFileSelect(
+                allAvailableProviders
+            )
         }
     }
 }

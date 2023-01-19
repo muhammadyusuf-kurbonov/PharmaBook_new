@@ -6,10 +6,8 @@ import uz.qmgroup.pharmadealers.features.core.exceptions.ProviderNotIdentifiedEx
 import uz.qmgroup.pharmadealers.features.core.parsers.UniversalSheetParser
 import uz.qmgroup.pharmadealers.features.core.utils.sheets
 
-class XLSXWorkbooksParser(
-    private val workbooks: List<Workbook>,
-) {
-    fun getAllAvailableProviders(): List<String> {
+class XLSXWorkbooksParser {
+    fun getAllAvailableProviders(workbooks: List<Workbook>): List<String> {
         val sheets = workbooks.flatMap { it.sheets() }
         return sheets.mapNotNull {
             try {
