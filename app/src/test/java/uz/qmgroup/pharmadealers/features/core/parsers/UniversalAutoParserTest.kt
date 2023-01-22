@@ -74,4 +74,21 @@ class UniversalAutoParserTest {
         assertEquals(21600.0, parseResult?.price)
         assertEquals("Berlin-Chemie Германия", parseResult?.manufacturer)
     }
+
+    @Test
+    fun `parse OOO Turon Med Pharm`() {
+        val workbook = WorkbookFactory.create(
+            javaClass.classLoader?.getResourceAsStream("test-turon-med-4233.xls")
+                ?: throw IllegalArgumentException()
+        )
+
+        val sheet = workbook.first()
+        val parser = UniversalSheetParser(sheet)
+        assertEquals("ТУРОН МЕД ФАРМ", parser.providerName)
+        val parseResult = parser.parse(sheet.getRow(9))
+        assertNotNull(parseResult)
+        assertEquals("Авилан Л р-р для инек. 2мл №5", parseResult?.name)
+        assertEquals(44500.0, parseResult?.price)
+        assertEquals("Витамины Украина", parseResult?.manufacturer)
+    }
 }

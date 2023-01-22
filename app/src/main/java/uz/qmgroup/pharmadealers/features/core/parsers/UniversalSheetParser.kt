@@ -13,12 +13,13 @@ import uz.qmgroup.pharmadealers.models.Medicine
 class UniversalSheetParser(private val sheet: Sheet) : XLSXParser {
     private val priceRegex = Regex("(Цена)|(тўлов)|(100%)", RegexOption.IGNORE_CASE)
     private val nameRegex =
-        Regex("(Nomi)|(Номи)|(Наименование)|(Название)", RegexOption.IGNORE_CASE)
+        Regex("(Nomi)|(Номи)|(Наименование)|(Название)|(Товар)", RegexOption.IGNORE_CASE)
     private val manufacturerRegex =
         Regex("(Ishlab chiqaruvchi)|(Производитель)|(Ишлаб чиқарувчи)", RegexOption.IGNORE_CASE)
 
     private val specialParsers = mapOf(
-        "AERO PHARM GROUP ООО" to AeroPharmGroupParser()
+        "AERO PHARM GROUP ООО" to AeroPharmGroupParser(),
+        "ТУРОН МЕД ФАРМ" to TuronMedPharmParser()
     )
 
     private val specialParser: XLSXParser?
@@ -45,7 +46,7 @@ class UniversalSheetParser(private val sheet: Sheet) : XLSXParser {
     }
 
     private fun parseProviderName(): String {
-        val credentialsRegex = Regex("(ООО|МЧЖ|MCHJ|OOO)", RegexOption.IGNORE_CASE)
+        val credentialsRegex = Regex("(ООО|МЧЖ|MCHJ|OOO|ФАРМ)", RegexOption.IGNORE_CASE)
 
         val credentialsRow = sheet.take(20).find { row ->
             row.any { cell ->
@@ -62,6 +63,8 @@ class UniversalSheetParser(private val sheet: Sheet) : XLSXParser {
             rawProviderName.split("\n").find {
                 it.contains(credentialsRegex)
             } ?: throw IllegalStateException("Cell with credentials could not be found?!")
+        } else if (rawProviderName.contains(Regex("([0-9]{2})\\.([0-9]{2})\\.([0-9]{4})"))) {
+            rawProviderName.replace(Regex("([0-9]{2})\\.([0-9]{2})\\.([0-9]{4})"), "").trim()
         } else {
             rawProviderName
         }
