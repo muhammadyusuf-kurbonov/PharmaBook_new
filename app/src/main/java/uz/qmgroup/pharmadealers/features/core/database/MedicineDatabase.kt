@@ -1,13 +1,17 @@
 package uz.qmgroup.pharmadealers.features.core.database
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    version = 1,
+    version = 2,
     entities = [MedicineEntity::class],
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2)
+    ]
 )
 abstract class MedicineDatabase: RoomDatabase() {
     companion object {
