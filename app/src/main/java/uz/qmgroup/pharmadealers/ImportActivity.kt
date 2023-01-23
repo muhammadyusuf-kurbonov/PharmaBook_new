@@ -3,6 +3,7 @@ package uz.qmgroup.pharmadealers
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import uz.qmgroup.pharmadealers.screens.importer.ImporterScreen
 import uz.qmgroup.pharmadealers.screens.importer.ImporterViewModel
 import uz.qmgroup.pharmadealers.ui.theme.PharmaDealersTheme
 
+
 class ImportActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,9 +33,19 @@ class ImportActivity : ComponentActivity() {
                 val viewModel: ImporterViewModel = viewModel()
 
                 fun handleUri(uri: Uri) {
+                    val contentResolver = context.contentResolver
                     val workbook =
-                        WorkbookFactory.create(context.contentResolver.openInputStream(uri))
-                    viewModel.addWorkbookToQueue(workbook)
+                        WorkbookFactory.create(contentResolver.openInputStream(uri))
+                    val cursor = contentResolver.query(uri, null, null, null, null)
+                    val fileName = cursor.use {
+                        if (it != null && it.moveToFirst()) {
+                            val displayNameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                            it.getString(displayNameIndex)
+                        } else {
+                            "Unknown"
+                        }
+                    }
+                    viewModel.addWorkbookToQueue(workbook, fileName)
                 }
 
                 LaunchedEffect(key1 = intent) {

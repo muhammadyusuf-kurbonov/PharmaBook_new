@@ -32,7 +32,8 @@ fun ImporterScreen(modifier: Modifier = Modifier, viewModel: ImporterViewModel =
                 dealers = currentState.dealers,
                 addWorkbookToQueue = viewModel::addWorkbookToQueue,
                 startImport = { viewModel.startImport(context) },
-                removeBook = { viewModel.excludeDealerFromImport(it) }
+                removeBook = { viewModel.excludeDealerFromImport(it) },
+                errorSheets = currentState.invalidFiles
             )
         }
 

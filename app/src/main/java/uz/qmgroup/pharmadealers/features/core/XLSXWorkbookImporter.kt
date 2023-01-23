@@ -1,41 +1,32 @@
 package uz.qmgroup.pharmadealers.features.core
 
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import org.apache.poi.ss.usermodel.Sheet
-import org.apache.poi.ss.usermodel.Workbook
 import uz.qmgroup.pharmadealers.features.core.parsers.XLSXSheetParserImpl
-import uz.qmgroup.pharmadealers.features.core.utils.sheets
 
 class XLSXWorkbookImporter(
-    private val workbook: Workbook,
+    private val sheet: Sheet,
     private val storage: MedicineStorage,
-    private val parserFactory: (Sheet) -> XLSXParser = { XLSXSheetParserImpl(it) }
+    private val parser: XLSXParser = XLSXSheetParserImpl(sheet)
 ) {
-    private fun getAllSheets() = workbook.sheets()
 
     suspend fun countMedicines(): Int {
-        return getAllSheets().map { parserFactory(it).parseSheet(it) }.merge().toList().size
+        return parser.parseSheet(sheet).toList().size
     }
 
     suspend fun trunk() = withContext(Dispatchers.IO) {
-        Log.d("Importer", "trunk() called")
-        val providers = getAllSheets().map { parserFactory(it).providerName }
-        providers.map {
-            async {
-                storage.removeOldMedicines(it)
-            }
-        }.awaitAll()
-        Log.d("Importer", "trunk() completed")
+        val provider = parser.providerName
+
+        async {
+            storage.removeOldMedicines(provider)
+        }.await()
     }
 
     suspend fun startImport() = withContext(Dispatchers.IO) {
-        getAllSheets().map { parserFactory(it).parseSheet(it) }.merge().collect {
+        parser.parseSheet(sheet).collect {
             storage.saveMedicine(it)
         }
     }

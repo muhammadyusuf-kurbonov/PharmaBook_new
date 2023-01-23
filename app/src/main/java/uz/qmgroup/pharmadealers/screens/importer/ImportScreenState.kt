@@ -1,7 +1,7 @@
 package uz.qmgroup.pharmadealers.screens.importer
 
 sealed class ImportScreenState(val dealers: List<String>) {
-    class AwaitFileSelect(dealers: List<String>) : ImportScreenState(dealers)
+    class AwaitFileSelect(dealers: List<String>, val invalidFiles: List<String>) : ImportScreenState(dealers)
     class Analyzing(dealers: List<String>) : ImportScreenState(dealers)
     class InProgress(val progresses: Map<String, Float>) :
         ImportScreenState(progresses.keys.toList())

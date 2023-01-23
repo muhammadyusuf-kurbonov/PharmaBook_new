@@ -1,6 +1,7 @@
 package uz.qmgroup.pharmadealers.screens.importer
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -12,42 +13,73 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
 import uz.qmgroup.pharmadealers.features.core.XLSXWorkbookImporter
-import uz.qmgroup.pharmadealers.features.core.XLSXWorkbooksParser
 import uz.qmgroup.pharmadealers.features.core.database.MedicineDatabase
 import uz.qmgroup.pharmadealers.features.core.database.MedicinesRepo
+import uz.qmgroup.pharmadealers.features.core.exceptions.HeaderNotFoundException
+import uz.qmgroup.pharmadealers.features.core.exceptions.HeadersNotFoundException
+import uz.qmgroup.pharmadealers.features.core.exceptions.ProviderNotIdentifiedException
 import uz.qmgroup.pharmadealers.features.core.parsers.XLSXSheetParserImpl
+import uz.qmgroup.pharmadealers.features.core.utils.sheets
 
 class ImporterViewModel : ViewModel() {
     private val _state = MutableStateFlow<ImportScreenState>(
-        ImportScreenState.AwaitFileSelect(emptyList())
+        ImportScreenState.AwaitFileSelect(emptyList(), emptyList())
     )
     val state = _state.asStateFlow()
 
-    private val books = mutableListOf<Workbook>()
-    private val exceptedDealers = mutableListOf<String>()
+    private val sheets = mutableListOf<Sheet>()
     private val mutex = Mutex()
 
-    fun addWorkbookToQueue(book: Workbook) {
-        if ((_state.value !is ImportScreenState.AwaitFileSelect) or (_state.value !is ImportScreenState.Analyzing))
+    fun addWorkbookToQueue(book: Workbook, fileName: String) {
+        Log.d("Importer", "addWorkbookToQueue() called with: book = $book, fileName = $fileName")
+        if ((_state.value !is ImportScreenState.AwaitFileSelect) and (_state.value !is ImportScreenState.Analyzing))
             throw IllegalStateException("State must be awaiting file select")
 
         _state.update { ImportScreenState.Analyzing(it.dealers) }
 
-        books.add(book)
-        extractProvidersNames(true)
+        viewModelScope.launch {
+            val errorSheets = mutableListOf(
+                *(_state.value as? ImportScreenState.AwaitFileSelect)?.invalidFiles.orEmpty()
+                    .toTypedArray()
+            )
+
+            book.use {
+                it.sheets().forEach { sheet ->
+                    try {
+                        XLSXSheetParserImpl(sheet)
+
+                        sheets.add(sheet)
+                    } catch (e: ProviderNotIdentifiedException) {
+                        errorSheets.add("$fileName -> ${sheet.sheetName}")
+                    } catch (e: HeadersNotFoundException) {
+                        errorSheets.add("$fileName -> ${sheet.sheetName}")
+                    } catch (e: HeaderNotFoundException) {
+                        errorSheets.add("$fileName -> ${sheet.sheetName}")
+                    } catch (e: IllegalStateException) {
+                        Log.e("XLSXParser", e.localizedMessage, e)
+                        errorSheets.add("$fileName -> ${sheet.sheetName}")
+                    }
+                }
+            }
+
+            extractProvidersNames(errorSheets)
+        }
     }
 
     fun excludeDealerFromImport(dealer: String) {
-        if (_state.value !is ImportScreenState.AwaitFileSelect)
-            throw IllegalStateException("State must be awaiting file select")
-        exceptedDealers.add(dealer)
-        extractProvidersNames()
+        TODO("Not implemented excluding providers yet")
+//
+//        if (_state.value !is ImportScreenState.AwaitFileSelect)
+//            throw IllegalStateException("State must be awaiting file select")
+//
+//        extractProvidersNames()
     }
 
     fun newImport() {
-        _state.update { ImportScreenState.AwaitFileSelect(emptyList()) }
+        _state.update { ImportScreenState.AwaitFileSelect(emptyList(), emptyList()) }
     }
 
     fun setAnalysisStarted() {
@@ -60,8 +92,6 @@ class ImporterViewModel : ViewModel() {
             val database = MedicineDatabase(context)
             val repository = MedicinesRepo(database)
 
-            val workbooks = books
-
             _state.update {
                 ImportScreenState.InProgress(
                     mapOf(
@@ -72,34 +102,31 @@ class ImporterViewModel : ViewModel() {
                 )
             }
 
-            val imports = workbooks.map { workbook ->
+            val imports = sheets.map { sheet ->
                 async(Dispatchers.IO) {
-                    workbook.use { book ->
-                        val sheet = book.first()
-                        val parser = XLSXSheetParserImpl(sheet)
-                        val importer = XLSXWorkbookImporter(
-                            storage = repository,
-                            workbook = book
-                        )
+                    val parser = XLSXSheetParserImpl(sheet)
+                    val importer = XLSXWorkbookImporter(
+                        storage = repository,
+                        sheet = sheet
+                    )
 
-                        val total = importer.countMedicines()
+                    val total = importer.countMedicines()
 
-                        importer.trunk()
+                    importer.trunk()
 
-                        val counter = launch {
-                            database.medicineDao.dealersMedicinesCount(parser.providerName)
-                                .collect {
-                                    val percentage = (it + 1).toFloat() / total.toFloat()
-                                    updateProgress(parser.providerName, percentage)
-                                }
-                        }
-
-                        importer.startImport()
-
-                        counter.cancel()
-
-                        return@async total
+                    val counter = launch {
+                        database.medicineDao.dealersMedicinesCount(parser.providerName)
+                            .collect {
+                                val percentage = (it + 1).toFloat() / total.toFloat()
+                                updateProgress(parser.providerName, percentage)
+                            }
                     }
+
+                    importer.startImport()
+
+                    counter.cancel()
+
+                    return@async total
                 }
             }
             val totalImported = imports.awaitAll().sumOf { it }
@@ -117,20 +144,14 @@ class ImporterViewModel : ViewModel() {
         }
     }
 
-    private fun extractProvidersNames(overrideExceptions: Boolean = false) {
-        viewModelScope.launch(Dispatchers.Default) {
-            var allAvailableProviders = XLSXWorkbooksParser().getAllAvailableProviders(books)
+    private fun extractProvidersNames(failedSheets: List<String>) {
+        val allAvailableProviders = sheets.map { XLSXSheetParserImpl(it).providerName }
 
-            if (!overrideExceptions)
-                allAvailableProviders =
-                    allAvailableProviders.filter { dealer -> !exceptedDealers.contains(dealer) }
-
-            _state.update {
-                ImportScreenState.AwaitFileSelect(
-                    allAvailableProviders
-                )
-            }
-
+        _state.update {
+            ImportScreenState.AwaitFileSelect(
+                allAvailableProviders,
+                failedSheets
+            )
         }
     }
 }

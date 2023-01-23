@@ -7,4 +7,5 @@
     <string name="title_activity_import">Импортировать</string>
     <string name="title_activity_imports">Импортировать несколько</string>
     <string name="Detected_dealers_to_import">Обнаружены следующие поставщики для импорта</string>
+    <string name="failed_to_recognize">Возникли ошибки с:</string>
 </resources>

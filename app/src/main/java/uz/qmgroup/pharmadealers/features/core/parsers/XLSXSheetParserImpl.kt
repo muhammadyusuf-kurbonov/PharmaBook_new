@@ -6,21 +6,21 @@ import uz.qmgroup.pharmadealers.features.core.XLSXParser
 import uz.qmgroup.pharmadealers.features.core.exceptions.ProviderNotIdentifiedException
 import uz.qmgroup.pharmadealers.features.core.utils.stringValueOrNull
 import uz.qmgroup.pharmadealers.models.Medicine
+import kotlin.jvm.Throws
 
-class XLSXSheetParserImpl(private val sheet: Sheet): XLSXParser {
+class XLSXSheetParserImpl @Throws(ProviderNotIdentifiedException::class) constructor(private val sheet: Sheet) : XLSXParser {
+
+
     private val parser: XLSXParser
-    private val specialParsers = mapOf(
+    private val specialParsers: Map<String, XLSXParser> = mapOf(
         "AERO PHARM GROUP ООО" to AeroPharmGroupParser(),
         "ТУРОН МЕД ФАРМ" to TuronMedPharmParser()
     )
 
-    init {
-        val providerName = parseProviderName()
-        parser = specialParsers[providerName] ?: UniversalSheetParser(sheet)
-    }
     override val providerName: String
         get() = parser.providerName
 
+    @Throws(ProviderNotIdentifiedException::class)
     private fun parseProviderName(): String {
         val credentialsRegex = Regex("(ООО|МЧЖ|MCHJ|OOO|ФАРМ)", RegexOption.IGNORE_CASE)
 
@@ -50,5 +50,10 @@ class XLSXSheetParserImpl(private val sheet: Sheet): XLSXParser {
 
     override fun parse(row: Row): Medicine? {
         return parser.parse(row)
+    }
+
+    init {
+        val providerName = parseProviderName()
+        parser = specialParsers[providerName] ?: UniversalSheetParser(sheet)
     }
 }

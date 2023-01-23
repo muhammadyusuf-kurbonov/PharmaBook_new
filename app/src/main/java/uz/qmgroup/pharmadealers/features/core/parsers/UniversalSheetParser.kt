@@ -10,7 +10,10 @@ import uz.qmgroup.pharmadealers.features.core.utils.findCellId
 import uz.qmgroup.pharmadealers.features.core.utils.stringValueOrNull
 import uz.qmgroup.pharmadealers.models.Medicine
 
-class UniversalSheetParser(private val sheet: Sheet) : XLSXParser {
+class UniversalSheetParser @Throws(
+    HeaderNotFoundException::class,
+    HeadersNotFoundException::class
+) constructor(private val sheet: Sheet) : XLSXParser {
     private val priceRegex = Regex("(Цена)|(тўлов)|(100%)", RegexOption.IGNORE_CASE)
     private val nameRegex =
         Regex("(Nomi)|(Номи)|(Наименование)|(Название)|(Товар)", RegexOption.IGNORE_CASE)

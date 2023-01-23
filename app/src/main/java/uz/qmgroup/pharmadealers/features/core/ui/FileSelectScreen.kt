@@ -1,8 +1,10 @@
 package uz.qmgroup.pharmadealers.features.core.ui
 
 import android.content.res.Configuration
+import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,14 +13,25 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,19 +48,39 @@ import uz.qmgroup.pharmadealers.R
 fun FileSelectScreen(
     modifier: Modifier = Modifier,
     startImport: () -> Unit,
-    addWorkbookToQueue: (Workbook) -> Unit,
+    addWorkbookToQueue: (Workbook, fileName: String) -> Unit,
     removeBook: (String) -> Unit,
-    dealers: List<String>
+    dealers: List<String>,
+    errorSheets: List<String>,
 ) {
     val context = LocalContext.current
+
+    var showBadge by remember {
+        mutableStateOf(true)
+    }
 
     val pickLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
     ) {
         it.map { fileUri ->
-            WorkbookFactory.create(context.contentResolver.openInputStream(fileUri))
-        }.forEach { workbook ->
-            addWorkbookToQueue(workbook)
+            val contentResolver = context.contentResolver
+
+            val workbook =
+                WorkbookFactory.create(contentResolver.openInputStream(fileUri))
+            val cursor = contentResolver.query(fileUri, null, null, null, null)
+            val fileName = cursor.use { currentCursor ->
+                if (currentCursor != null && currentCursor.moveToFirst()) {
+                    val displayNameIndex =
+                        currentCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    currentCursor.getString(displayNameIndex)
+                } else {
+                    "Unknown"
+                }
+            }
+
+            return@map fileName to workbook
+        }.forEach { (fileName, workbook) ->
+            addWorkbookToQueue(workbook, fileName)
         }
     }
 
@@ -57,11 +90,47 @@ fun FileSelectScreen(
             .fillMaxHeight()
             .padding(16.dp)
     ) {
+        AnimatedVisibility(errorSheets.isNotEmpty() && showBadge) {
+            ElevatedCard(
+                modifier = Modifier.padding(8.dp),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.failed_to_recognize),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+
+                        IconButton(onClick = { showBadge = false }, modifier = Modifier.size(24.dp)) {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                        }
+                    }
+
+                    errorSheets.forEach {
+                        Text(text = "\u2022 $it", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
+
         Card(
             onClick = {
                 pickLauncher.launch(
                     arrayOf(
                         "application/vnd.ms-excel",
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     ),
                 )
             }, modifier = Modifier
@@ -144,16 +213,26 @@ fun FileSelectScreen(
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
     showSystemUi = true, showBackground = true
 )
+@Preview(
+    name = "Import completed dark",
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
+    showSystemUi = true, showBackground = true, locale = "ru"
+)
 @Composable
 fun FileSelectScreenPreview() {
     FileSelectScreen(
         startImport = {},
-        addWorkbookToQueue = {},
+        addWorkbookToQueue = { _, _ -> },
         dealers = listOf(
             "OOO Pharm Group Gate",
             "OOO Pharm Group Gate",
             "OOO Pharm Group Gate",
         ),
-        removeBook = {}
+        removeBook = {},
+        errorSheets = listOf(
+            "MacGregor.Name",
+            "MacGregor.Name",
+            "MacGregor.Name",
+        )
     )
 }
