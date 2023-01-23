@@ -17,13 +17,6 @@ class UniversalSheetParser(private val sheet: Sheet) : XLSXParser {
     private val manufacturerRegex =
         Regex("(Ishlab chiqaruvchi)|(Производитель)|(Ишлаб чиқарувчи)", RegexOption.IGNORE_CASE)
 
-    private val specialParsers = mapOf(
-        "AERO PHARM GROUP ООО" to AeroPharmGroupParser(),
-        "ТУРОН МЕД ФАРМ" to TuronMedPharmParser()
-    )
-
-    private val specialParser: XLSXParser?
-
     private val priceCellId: Int
     private val nameCellId: Int
     private val manufacturerCellId: Int
@@ -31,7 +24,6 @@ class UniversalSheetParser(private val sheet: Sheet) : XLSXParser {
 
     init {
         providerName = parseProviderName()
-        specialParser = specialParsers[providerName]
 
         val headersRow = sheet.take(20).find { row ->
             row.any { cell -> cell.stringValueOrNull()?.contains(priceRegex) ?: false }
@@ -73,8 +65,6 @@ class UniversalSheetParser(private val sheet: Sheet) : XLSXParser {
     }
 
     override fun parse(row: Row): Medicine? {
-        if (specialParser != null)
-            return specialParser.parse(row)
         try {
             val medicine = Medicine(
                 databaseId = 0,

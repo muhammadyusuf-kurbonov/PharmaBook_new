@@ -17,7 +17,7 @@ import uz.qmgroup.pharmadealers.features.core.XLSXWorkbookImporter
 import uz.qmgroup.pharmadealers.features.core.XLSXWorkbooksParser
 import uz.qmgroup.pharmadealers.features.core.database.MedicineDatabase
 import uz.qmgroup.pharmadealers.features.core.database.MedicinesRepo
-import uz.qmgroup.pharmadealers.features.core.parsers.UniversalSheetParser
+import uz.qmgroup.pharmadealers.features.core.parsers.XLSXSheetParserImpl
 
 class ImporterViewModel : ViewModel() {
     private val _state = MutableStateFlow<ImportScreenState>(
@@ -30,10 +30,7 @@ class ImporterViewModel : ViewModel() {
     private val mutex = Mutex()
 
     fun addWorkbookToQueue(book: Workbook) {
-        if (!(
-                    (_state.value is ImportScreenState.AwaitFileSelect) or
-                            (_state.value is ImportScreenState.Analyzing))
-        )
+        if ((_state.value !is ImportScreenState.AwaitFileSelect) or (_state.value !is ImportScreenState.Analyzing))
             throw IllegalStateException("State must be awaiting file select")
 
         _state.update { ImportScreenState.Analyzing(it.dealers) }
@@ -79,7 +76,7 @@ class ImporterViewModel : ViewModel() {
                 async(Dispatchers.IO) {
                     workbook.use { book ->
                         val sheet = book.first()
-                        val parser = UniversalSheetParser(sheet)
+                        val parser = XLSXSheetParserImpl(sheet)
                         val importer = XLSXWorkbookImporter(
                             storage = repository,
                             workbook = book
@@ -122,8 +119,7 @@ class ImporterViewModel : ViewModel() {
 
     private fun extractProvidersNames(overrideExceptions: Boolean = false) {
         viewModelScope.launch(Dispatchers.Default) {
-            val parser = XLSXWorkbooksParser()
-            var allAvailableProviders = parser.getAllAvailableProviders(books)
+            var allAvailableProviders = XLSXWorkbooksParser().getAllAvailableProviders(books)
 
             if (!overrideExceptions)
                 allAvailableProviders =

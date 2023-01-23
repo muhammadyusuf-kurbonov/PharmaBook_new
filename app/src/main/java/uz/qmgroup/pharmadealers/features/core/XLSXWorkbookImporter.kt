@@ -9,13 +9,13 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
-import uz.qmgroup.pharmadealers.features.core.parsers.UniversalSheetParser
+import uz.qmgroup.pharmadealers.features.core.parsers.XLSXSheetParserImpl
 import uz.qmgroup.pharmadealers.features.core.utils.sheets
 
 class XLSXWorkbookImporter(
     private val workbook: Workbook,
     private val storage: MedicineStorage,
-    private val parserFactory: (Sheet) -> XLSXParser = { UniversalSheetParser(it) }
+    private val parserFactory: (Sheet) -> XLSXParser = { XLSXSheetParserImpl(it) }
 ) {
     private fun getAllSheets() = workbook.sheets()
 
@@ -25,7 +25,7 @@ class XLSXWorkbookImporter(
 
     suspend fun trunk() = withContext(Dispatchers.IO) {
         Log.d("Importer", "trunk() called")
-        val providers = getAllSheets().map { UniversalSheetParser(it).providerName }
+        val providers = getAllSheets().map { parserFactory(it).providerName }
         providers.map {
             async {
                 storage.removeOldMedicines(it)

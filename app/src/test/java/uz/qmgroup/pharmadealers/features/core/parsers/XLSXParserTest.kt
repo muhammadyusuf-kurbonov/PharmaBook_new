@@ -5,7 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
-class UniversalAutoParserTest {
+class XLSXParserTest {
 
     @Test
     fun `parse Aero Pharm Group`() {
@@ -15,7 +15,7 @@ class UniversalAutoParserTest {
         )
 
         val sheet = workbook.first()
-        val parser = UniversalSheetParser(sheet)
+        val parser = XLSXSheetParserImpl(sheet)
         assertEquals("AERO PHARM GROUP ООО", parser.providerName)
         val parseResult = parser.parse(sheet.getRow(9))
         assertNotNull(parseResult)
@@ -32,7 +32,7 @@ class UniversalAutoParserTest {
         )
 
         val sheet = workbook.first()
-        val parser = UniversalSheetParser(sheet)
+        val parser = XLSXSheetParserImpl(sheet)
         assertEquals(" \"АЗИМБОЙ МЕГА ФАРМ\" МЧЖ", parser.providerName)
         val parseResult = parser.parse(sheet.getRow(9))
         assertNotNull(parseResult)
@@ -49,7 +49,7 @@ class UniversalAutoParserTest {
         )
 
         val sheet = workbook.first()
-        val parser = UniversalSheetParser(sheet)
+        val parser = XLSXSheetParserImpl(sheet)
         assertEquals("ООО \"МУХТАСАР\"  МЧЖ", parser.providerName)
         val parseResult = parser.parse(sheet.getRow(9))
         assertNotNull(parseResult)
@@ -66,7 +66,7 @@ class UniversalAutoParserTest {
         )
 
         val sheet = workbook.first()
-        val parser = UniversalSheetParser(sheet)
+        val parser = XLSXSheetParserImpl(sheet)
         assertEquals("OOO «Pharm Gate Group»", parser.providerName)
         val parseResult = parser.parse(sheet.getRow(9))
         assertNotNull(parseResult)
@@ -83,7 +83,7 @@ class UniversalAutoParserTest {
         )
 
         val sheet = workbook.first()
-        val parser = UniversalSheetParser(sheet)
+        val parser = XLSXSheetParserImpl(sheet)
         assertEquals("ТУРОН МЕД ФАРМ", parser.providerName)
         val parseResult = parser.parse(sheet.getRow(9))
         assertNotNull(parseResult)
