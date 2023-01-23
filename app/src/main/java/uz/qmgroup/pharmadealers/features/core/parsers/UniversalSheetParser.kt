@@ -74,7 +74,7 @@ class UniversalSheetParser @Throws(
                 id = row.getCell(1).toString(),
                 price = row.getCell(priceCellId).numericCellValue,
                 manufacturer = row.getCell(manufacturerCellId).stringCellValue,
-                name = row.getCell(nameCellId).stringCellValue,
+                name = row.getCell(nameCellId).stringCellValue.trim(),
                 expireDate = row.getCell(5).toString(),
                 dealer = providerName
             )
@@ -87,6 +87,8 @@ class UniversalSheetParser @Throws(
 
             return medicine
         } catch (e: IllegalStateException) {
+            return null
+        } catch (e: NullPointerException) {
             return null
         }
     }
