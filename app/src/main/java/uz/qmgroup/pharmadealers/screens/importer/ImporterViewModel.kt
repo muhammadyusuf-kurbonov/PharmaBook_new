@@ -9,6 +9,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -102,6 +104,8 @@ class ImporterViewModel : ViewModel() {
                 )
             }
 
+            val countersFlow = database.medicineDao.dealersMedicinesCount(_state.value.dealers)
+
             val imports = sheets.map { sheet ->
                 async(Dispatchers.IO) {
                     val parser = XLSXSheetParserImpl(sheet)
@@ -115,10 +119,11 @@ class ImporterViewModel : ViewModel() {
                     importer.trunk()
 
                     val counter = launch {
-                        database.medicineDao.dealersMedicinesCount(parser.providerName)
+                        countersFlow.map { counter -> counter.find { it.dealer == parser.providerName } }
+                            .distinctUntilChanged { old, new -> old?.medicinesCount == new?.medicinesCount }
                             .collect {
-                                val percentage = (it + 1).toFloat() / total.toFloat()
-                                updateProgress(parser.providerName, percentage)
+                                if (it == null) return@collect
+                                updateProgress(it.dealer, (it.medicinesCount.toFloat() / total))
                             }
                     }
 
